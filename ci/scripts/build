@@ -1,0 +1,5 @@
+#!/bin/bash
+
+set -e -u -x
+export GOPATH=$PWD/my-repo
+go build -o built-project/my-project github.com/concourse/my-project
