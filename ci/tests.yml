@@ -12,4 +12,4 @@ inputs:
 
 run:
   path: bash
-  args: ['-c', 'go get github.com/tools/godep; cd simple-go-webapp; godep restore; go test']
+  args: ['-c', 'go test']
