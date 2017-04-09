@@ -13,7 +13,7 @@ jobs:
     file: simple-go-webapp-source/ci/build.yml
   - put: app-version
     params:
-      file: app-version/app-version
+      file: app-version/number
 
 resources:
 - name: simple-go-webapp-source

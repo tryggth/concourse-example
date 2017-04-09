@@ -10,8 +10,8 @@ image_resource:
 inputs:
 - name: simple-go-webapp-source
   path: gopath/src/github.com/tryggth/concourse-example
-
+- name: app-version
 run:
   path: bash
-  args: ['-c', 'go get; go build -o app; ls -la']
+  args: ['-c', 'go get; go build -o app-`cat /app-version/number`; ls -la']
   dir: gopath/src/github.com/tryggth/concourse-example/app
