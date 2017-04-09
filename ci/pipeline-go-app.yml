@@ -18,6 +18,7 @@ resources:
   type: git
   source:
     uri: https://github.com/tryggth/concourse-example
+    paths: [app/*]
 
 #- name: deploy-web-app
 #  type: cf

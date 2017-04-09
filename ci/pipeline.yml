@@ -35,7 +35,7 @@ jobs:
   plan:
   - get: version
     params:
-      bump: minor
+      bump: patch
   - get: my-repo
     trigger: true
   - put: hello-world-docker-image
