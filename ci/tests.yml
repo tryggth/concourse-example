@@ -14,4 +14,4 @@ inputs:
 run:
   path: bash
   args: ['-c', 'go get; go build -o app; go test; ls -la']
-  dir: gopath/src/github.com/tryggth/concourse-example
+  dir: gopath/src/github.com/tryggth/concourse-example/app
