@@ -11,8 +11,7 @@ inputs:
 - name: simple-go-webapp-source
   path: gopath/src/github.com/tryggth/concourse-example
 - name: app-version
-  path: gopath/src/github.com/tryggth/concourse-example/app/app-version
 run:
   path: bash
-  args: ['-c', 'go get; go build -o app; cat app-version/number; ls -Rla']
+  args: ['-c', 'go get; go build -o app; cat app-version/number; cat /app-version/number; ls -Rla']
   dir: gopath/src/github.com/tryggth/concourse-example/app
