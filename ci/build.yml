@@ -13,5 +13,5 @@ inputs:
 - name: app-version
 run:
   path: bash
-  args: ['-c', 'go get; go build -o app; cat app-version/number; cat /app-version/number; ls -Rla']
+  args: ['-c', 'go get; go build -o app; ls -la app-version; ls -la /app-version; ls -Rla']
   dir: gopath/src/github.com/tryggth/concourse-example/app
