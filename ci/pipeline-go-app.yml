@@ -7,7 +7,7 @@ jobs:
   - get: simple-go-webapp-source
     trigger: true
   - task: run-build
-    file: simple-go-webapp/ci/build.yml
+    file: simple-go-webapp-source/ci/build.yml
 #  - put: deploy-web-app
 #    params:
 #      manifest: simple-go-webapp/manifest.yml
@@ -18,7 +18,18 @@ resources:
   type: git
   source:
     uri: https://github.com/tryggth/concourse-example
-    paths: [app/*]
+    paths: [app]
+
+- name: version
+  type: semver
+  source:
+    branch: version
+    driver: git
+    file: app-version
+    initial_version: 0.0.1
+    password: {{git-password}}
+    uri: https://github.com/tryggth/concourse-example.git
+    username: tryggth
 
 #- name: deploy-web-app
 #  type: cf
