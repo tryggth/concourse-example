@@ -27,6 +27,6 @@ func Log(handler http.Handler) http.Handler {
 
 func rootHandler() http.Handler {
   return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-    w.Write([]byte("Hello, World!"))
+    w.Write([]byte("Hello, New World!"))
   })
 }
