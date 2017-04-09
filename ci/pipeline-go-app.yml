@@ -4,17 +4,17 @@ jobs:
   public: true
   serial: true
   plan:
-  - get: simple-go-webapp
+  - get: simple-go-webapp-source
     trigger: true
-  - task: run-tests
-    file: simple-go-webapp/ci/tests.yml
+  - task: run-build
+    file: simple-go-webapp/ci/build.yml
 #  - put: deploy-web-app
 #    params:
 #      manifest: simple-go-webapp/manifest.yml
 #      path: simple-go-webapp/
 
 resources:
-- name: simple-go-webapp
+- name: simple-go-webapp-source
   type: git
   source:
     uri: https://github.com/tryggth/concourse-example
