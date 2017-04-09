@@ -1,6 +1,6 @@
 ---
 jobs:
-- name: run-tests
+- name: run-build
   public: true
   serial: true
   plan:
