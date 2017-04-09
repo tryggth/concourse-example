@@ -6,12 +6,14 @@ jobs:
   plan:
   - get: simple-go-webapp-source
     trigger: true
+  - get: app-version
+    params:
+      bump: patch
   - task: run-build
     file: simple-go-webapp-source/ci/build.yml
-#  - put: deploy-web-app
-#    params:
-#      manifest: simple-go-webapp/manifest.yml
-#      path: simple-go-webapp/
+  - put: app-version
+    params:
+      file: app-version/app-version
 
 resources:
 - name: simple-go-webapp-source
@@ -20,7 +22,7 @@ resources:
     uri: https://github.com/tryggth/concourse-example
     paths: [app]
 
-- name: version
+- name: app-version
   type: semver
   source:
     branch: version
