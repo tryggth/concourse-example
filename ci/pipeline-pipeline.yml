@@ -1,0 +1,52 @@
+################################################################################
+# REFERENCES
+# ConcourseCI Docs: https://concourse.ci
+# Concourse tutorial: https://github.com/starkandwayne/concourse-tutorial
+#
+# NOTES
+# This file is a self-contained description of a Concourse CI pipeline
+# to deploy a http://gosparta.io application.  There's a couple of things to
+# note:
+#   - The YAML uses node references so that scripts can be defined in the
+#     CONSTANTS key and referenced in the jobs section
+#   - This requires an additional YML file that defines AWS credentials and the
+#     S3 bucket that should be used for storage. Required keys:
+#       s3-bucket: XXXXXX
+#       s3-access-key-id: XXXXXXXXXXXXXXXXXX
+#       s3-secret-access-key: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+#
+resource_types:
+- name: fly
+  type: docker-image
+  source:
+    repository: troykinsella/concourse-fly-resource
+    tag: latest
+
+################################################################################
+# RESOURCES
+################################################################################
+resources:
+- name: simple-go-ci-source
+  type: git
+  source:
+    uri: https://github.com/tryggth/concourse-example
+    paths: [ci]
+
+- name: fly-runner
+  type: fly
+  source:
+    url: http://my-release-web.default:8080
+    username: concourse
+    password: concourse
+
+################################################################################
+# JOBS
+################################################################################
+jobs:
+  - name: UpdatePipeline
+    plan:
+    - get: simple-go-ci-source
+      trigger: true
+    - put: fly-runner
+      command: set-pipeline
+      options: --config simple-go-ci-source/ci/pipeline-go-app.yml --pipeline pipeline
