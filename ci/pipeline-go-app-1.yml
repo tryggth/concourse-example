@@ -125,7 +125,7 @@ jobs:
         - name: build
     - put: BinaryArchive
       params:
-        file: build/simple-go-webapp-source-app-*
+        file: build/simple-go-webapp-app-*
 
 ################################################################################
 # CONSTANTS
