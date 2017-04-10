@@ -31,12 +31,29 @@ resources:
     uri: https://github.com/tryggth/concourse-example
     paths: [app]
 
+- name: simple-go-docker-source
+  type: git
+  source:
+    uri: https://github.com/tryggth/concourse-example
+    paths: [docker]
+
 - name: app-version
   type: semver
   source:
     branch: version
     driver: git
     file: app-version
+    initial_version: 0.0.1
+    password: {{git-password}}
+    uri: https://github.com/tryggth/concourse-example.git
+    username: tryggth
+
+- name: container-version
+  type: semver
+  source:
+    branch: version
+    driver: git
+    file: version
     initial_version: 0.0.1
     password: {{git-password}}
     uri: https://github.com/tryggth/concourse-example.git
@@ -55,6 +72,14 @@ resources:
       bucket: concourse-demo
       json_key: {{gcs-storage}}
       regexp: simple-go-webapp-app-(.*)
+
+- name: simple-go-webapp-docker-image
+  type: docker-image
+  source:
+    email: tryggth2009@gmail.com
+    password: {{git-password}}
+    repository: tryggth/simple-go-webapp
+    username: tryggth
 
 ################################################################################
 # JOBS
@@ -127,6 +152,35 @@ jobs:
       params:
         file: build/simple-go-webapp-app-*
 
+  - name: BuildContainer
+    plan:
+    - get: container-version
+      params:
+        bump: patch
+    - get: BinaryArchive
+      trigger: true
+    - get: simple-go-docker-source
+      trigger: true
+
+    - task: build-container
+      config:
+        << : *CONFIG
+        inputs:
+          - name: simple-go-docker-source
+          - name: SourceArchive
+        run:
+          path: sh
+          args:
+          - -exc
+          - *DOCKER_SETUP_SCRIPT
+    - put: simple-go-webapp-docker-image
+      params:
+        build: simple-go-docker-source/docker
+        tag: container-version/number
+    - put: container-version
+      params:
+        file: container-version/number
+
 ################################################################################
 # CONSTANTS
 ################################################################################
@@ -182,3 +236,10 @@ CONSTANTS:
       popd
       OUTPUT_FILE="./build/simple-go-webapp-app-$SEM_NUMBER"
       cp $GOPATH/src/simple-go-webapp-source/app/app $OUTPUT_FILE
+
+  - DOCKER_SETUP_SCRIPT: &DOCKER_SETUP_SCRIPT |
+      cd BinaryArchive
+        SEM_VERSION=`cat version`
+        echo "SEM_VERSION=$SEM_VERSION"
+      cd ..
+      cp ./BinaryArchive/simple-go-webapp-app-$SEM_VERSION ./simple-go-docker-source/docker/simple-go-webapp-app

@@ -1,6 +1,6 @@
 FROM busybox
 
-ADD hello-world /bin/hello-world
+ADD simple-go-webapp-app /bin/simple-go-webapp-app
 
-ENTRYPOINT ["/bin/hello-world"]
+ENTRYPOINT ["/bin/simple-go-webapp-app"]
 CMD ["world"]
