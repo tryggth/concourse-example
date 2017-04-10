@@ -7,7 +7,6 @@ import (
 )
 
 func main() {
-
   rtr := mux.NewRouter()
   rtr.Handle("/", rootHandler()).Methods("GET")
 

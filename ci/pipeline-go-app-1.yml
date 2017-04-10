@@ -178,7 +178,7 @@ CONSTANTS:
       tar -xf ./SourceArchive/*.tgz
       mv ./simple-go-webapp-source $GOPATH/src
       pushd $GOPATH/src/simple-go-webapp-source/app
-      go build . -o app
+      go build -o app .
       popd
       OUTPUT_FILE="./build/simple-go-webapp-app-$SEM_NUMBER"
       cp $GOPATH/src/simple-go-webapp-source/app/app $OUTPUT_FILE
