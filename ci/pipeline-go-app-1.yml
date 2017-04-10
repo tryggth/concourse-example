@@ -54,7 +54,7 @@ resources:
   source:
       bucket: concourse-demo
       json_key: {{gcs-storage}}
-      regexp: simple-go-webapp-app-(.*).tgz
+      regexp: simple-go-webapp-app-(.*)
 
 ################################################################################
 # JOBS
@@ -125,7 +125,7 @@ jobs:
         - name: build
     - put: BinaryArchive
       params:
-        file: build/simple-go-webapp-source-app-*.tgz*
+        file: build/simple-go-webapp-source-app-*
 
 ################################################################################
 # CONSTANTS
