@@ -114,9 +114,10 @@ jobs:
       config:
         << : *CONFIG
         inputs:
+          - name: app-version
           - name: SourceArchive
         run:
-          path: sh
+          path: bash
           args:
           - -exc
           - *BUILD_SCRIPT
