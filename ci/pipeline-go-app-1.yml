@@ -37,6 +37,12 @@ resources:
     uri: https://github.com/tryggth/concourse-example
     paths: [docker]
 
+- name: simple-go-ci-source
+  type: git
+  source:
+    uri: https://github.com/tryggth/concourse-example
+    paths: [ci]
+
 - name: app-version
   type: semver
   source:
@@ -153,29 +159,32 @@ jobs:
         file: build/simple-go-webapp-app-*
 
   - name: BuildContainer
+    serial: true
     plan:
     - get: container-version
       params:
         bump: patch
     - get: BinaryArchive
+      passed: [Build]
       trigger: true
     - get: simple-go-docker-source
       trigger: true
-
     - task: build-container
       config:
         << : *CONFIG
         inputs:
           - name: simple-go-docker-source
-          - name: SourceArchive
+          - name: BinaryArchive
         run:
           path: sh
           args:
           - -exc
           - *DOCKER_SETUP_SCRIPT
+        outputs:
+          - name: dockerbuild
     - put: simple-go-webapp-docker-image
       params:
-        build: simple-go-docker-source/docker
+        build: dockerbuild
         tag: container-version/number
     - put: container-version
       params:
@@ -242,4 +251,6 @@ CONSTANTS:
         SEM_VERSION=`cat version`
         echo "SEM_VERSION=$SEM_VERSION"
       cd ..
-      cp ./BinaryArchive/simple-go-webapp-app-$SEM_VERSION ./simple-go-docker-source/docker/simple-go-webapp-app
+      cp BinaryArchive/simple-go-webapp-app-$SEM_VERSION dockerbuild/simple-go-webapp-app
+      cp -var simple-go-docker-source/docker/* dockerbuild
+      ls -la dockerbuild

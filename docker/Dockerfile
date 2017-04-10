@@ -1,4 +1,4 @@
-FROM busybox
+FROM alpine:latest
 
 ADD simple-go-webapp-app /bin/simple-go-webapp-app
 
