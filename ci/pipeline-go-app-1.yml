@@ -49,6 +49,13 @@ resources:
       json_key: {{gcs-storage}}
       regexp: simple-go-webapp-source-(.*).tgz
 
+- name: BinaryArchive
+  type: gcs-resource
+  source:
+      bucket: concourse-demo
+      json_key: {{gcs-storage}}
+      regexp: simple-go-webapp-app-(.*).tgz
+
 ################################################################################
 # JOBS
 ################################################################################
@@ -102,6 +109,7 @@ jobs:
     - get: SourceArchive
       passed: [UnitTest]
       trigger: true
+    - get: app-version
     - task: build
       config:
         << : *CONFIG
@@ -114,6 +122,9 @@ jobs:
           - *BUILD_SCRIPT
         outputs:
         - name: build
+    - put: BinaryArchive
+      params:
+        file: build/simple-go-webapp-source-app-*.tgz*
 
 ################################################################################
 # CONSTANTS
@@ -157,7 +168,16 @@ CONSTANTS:
       go test -v .
 
   - BUILD_SCRIPT: &BUILD_SCRIPT |
+      cd app-version
+        SEM_NUMBER=`cat number`
+        SEM_VERSION=`cat version`
+        echo "SEM_NUMBER=$SEM_NUMBER, SEM_VERSION=$SEM_VERSION"
+      cd ..
+
       tar -xf ./SourceArchive/*.tgz
       mv ./simple-go-webapp-source $GOPATH/src
-      cd  $GOPATH/src/simple-go-webapp-source/app
-      go build .
+      pushd $GOPATH/src/simple-go-webapp-source/app
+      go build . -o app
+      popd
+      OUTPUT_FILE="./build/simple-go-webapp-app-$SEM_NUMBER"
+      cp $GOPATH/src/simple-go-webapp-source/app/app $OUTPUT_FILE
