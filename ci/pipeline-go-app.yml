@@ -37,12 +37,6 @@ resources:
     uri: https://github.com/tryggth/concourse-example
     paths: [docker]
 
-- name: simple-go-ci-source
-  type: git
-  source:
-    uri: https://github.com/tryggth/concourse-example
-    paths: [ci]
-
 - name: app-version
   type: semver
   source:
