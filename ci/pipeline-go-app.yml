@@ -25,13 +25,13 @@ resource_types:
 # RESOURCES
 ################################################################################
 resources:
-- name: simple-go-webapp-source
+- name: source-simple-go-webapp
   type: git
   source:
     uri: https://github.com/tryggth/concourse-example
     paths: [app]
 
-- name: simple-go-docker-source
+- name: source-simple-go-docker
   type: git
   source:
     uri: https://github.com/tryggth/concourse-example
@@ -59,21 +59,14 @@ resources:
     uri: https://github.com/tryggth/concourse-example.git
     username: tryggth
 
-- name: SourceArchive
-  type: gcs-resource
-  source:
-      bucket: concourse-demo
-      json_key: {{gcs-storage}}
-      regexp: simple-go-webapp-source-(.*).tgz
-
-- name: BinaryArchive
+- name: BinaryApplicationArchive
   type: gcs-resource
   source:
       bucket: concourse-demo
       json_key: {{gcs-storage}}
       regexp: simple-go-webapp-app-(.*)
 
-- name: simple-go-webapp-docker-image
+- name: docker-image-simple-go-webapp
   type: docker-image
   source:
     email: tryggth2009@gmail.com
@@ -85,62 +78,29 @@ resources:
 # JOBS
 ################################################################################
 jobs:
-  - name: Package
-    serial_groups: [app-version]
+  - name: BuildApp
     plan:
-    - get: simple-go-webapp-source
+    - get: source-simple-go-webapp
       trigger: true
     - get: app-version
       params:
         bump: patch
-    - task: package
-      config:
-        << : *CONFIG
-        inputs:
-          - name: simple-go-webapp-source
-          - name: app-version
-        run:
-          path: sh
-          args:
-          - -exc
-          - *PACKAGE_SCRIPT
-        outputs:
-          - name: build
-    - put: SourceArchive
-      params:
-        file: build/simple-go-webapp-source-*.tgz*
-    - put: app-version
-      params:
-        file: app-version/number
-
-  - name: UnitTest
-    plan:
-    - get: SourceArchive
-      passed: [Package]
-      trigger: true
     - task: unit-test
       config:
         << : *CONFIG
         inputs:
-          - name: SourceArchive
+          - name: source-simple-go-webapp
         run:
           path: sh
           args:
           - -exc
           - *UNIT_TEST_SCRIPT
-
-  - name: Build
-    plan:
-    - get: SourceArchive
-      passed: [UnitTest]
-      trigger: true
-    - get: app-version
     - task: build
       config:
         << : *CONFIG
         inputs:
           - name: app-version
-          - name: SourceArchive
+          - name: source-simple-go-webapp
         run:
           path: bash
           args:
@@ -148,27 +108,26 @@ jobs:
           - *BUILD_SCRIPT
         outputs:
         - name: build
-    - put: BinaryArchive
+    - put: BinaryApplicationArchive
       params:
         file: build/simple-go-webapp-app-*
 
   - name: BuildContainer
-    serial: true
     plan:
     - get: container-version
       params:
         bump: patch
-    - get: BinaryArchive
-      passed: [Build]
+    - get: BinaryApplicationArchive
+      passed: [BuildApp]
       trigger: true
-    - get: simple-go-docker-source
+    - get: source-simple-go-docker
       trigger: true
     - task: build-container
       config:
         << : *CONFIG
         inputs:
-          - name: simple-go-docker-source
-          - name: BinaryArchive
+          - name: source-simple-go-docker
+          - name: BinaryApplicationArchive
         run:
           path: sh
           args:
@@ -176,7 +135,7 @@ jobs:
           - *DOCKER_SETUP_SCRIPT
         outputs:
           - name: dockerbuild
-    - put: simple-go-webapp-docker-image
+    - put: docker-image-simple-go-webapp
       params:
         build: dockerbuild
         tag: container-version/number
@@ -195,34 +154,12 @@ CONSTANTS:
         source:
           repository: golang
           tag: '1.7'
-  - PACKAGE_SCRIPT: &PACKAGE_SCRIPT |
-        cd app-version
-          SEM_NUMBER=`cat number`
-          SEM_VERSION=`cat version`
-          echo "SEM_NUMBER=$SEM_NUMBER, SEM_VERSION=$SEM_VERSION"
-        cd ..
-
-        cd simple-go-webapp-source
-          if [ ! -d ./vendor ]
-            then
-              echo "./vendor does not exist - fetching packages"
-              go get -d -v ./...
-              ls -la $GOPATH/src
-              # Move the $GOPATH/src contents into /.vendor
-              mv  $GOPATH/src ./vendor
-          fi
-        cd ..
-
-        mkdir -pv build
-
-        # TAR everything up...
-        OUTPUT_FILE="./build/simple-go-webapp-source-$SEM_NUMBER.tgz"
-        tar -zcf $OUTPUT_FILE --exclude=".git" ./simple-go-webapp-source
 
   - UNIT_TEST_SCRIPT: &UNIT_TEST_SCRIPT |
-      tar -xf ./SourceArchive/*.tgz
-      mv ./simple-go-webapp-source $GOPATH/src
-      cd  $GOPATH/src/simple-go-webapp-source/app
+      cp -var source-simple-go-webapp $GOPATH/src
+      cd $GOPATH/src/source-simple-go-webapp/app
+
+      go get -d -v ./...
       go test -v .
 
   - BUILD_SCRIPT: &BUILD_SCRIPT |
@@ -232,19 +169,19 @@ CONSTANTS:
         echo "SEM_NUMBER=$SEM_NUMBER, SEM_VERSION=$SEM_VERSION"
       cd ..
 
-      tar -xf ./SourceArchive/*.tgz
-      mv ./simple-go-webapp-source $GOPATH/src
-      pushd $GOPATH/src/simple-go-webapp-source/app
+      cp -var source-simple-go-webapp $GOPATH/src
+      pushd $GOPATH/src/source-simple-go-webapp/app
+      go get -d -v ./...
       go build -o app .
       popd
       OUTPUT_FILE="./build/simple-go-webapp-app-$SEM_NUMBER"
-      cp $GOPATH/src/simple-go-webapp-source/app/app $OUTPUT_FILE
+      cp $GOPATH/src/source-simple-go-webapp/app/app $OUTPUT_FILE
 
   - DOCKER_SETUP_SCRIPT: &DOCKER_SETUP_SCRIPT |
-      cd BinaryArchive
+      cd BinaryApplicationArchive
         SEM_VERSION=`cat version`
         echo "SEM_VERSION=$SEM_VERSION"
       cd ..
-      cp BinaryArchive/simple-go-webapp-app-$SEM_VERSION dockerbuild/simple-go-webapp-app
-      cp -var simple-go-docker-source/docker/* dockerbuild
+      cp BinaryApplicationArchive/simple-go-webapp-app-$SEM_VERSION dockerbuild/simple-go-webapp-app
+      cp -var source-simple-go-docker/docker/* dockerbuild
       ls -la dockerbuild
